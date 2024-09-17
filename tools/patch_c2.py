@@ -4,18 +4,19 @@ import argparse
 import hashlib
 import pathlib
 import shutil
+from typing import Optional, List
 
-ORIGINAL_C2_MD5 = "dcd69f1dd28b02dd03dd7ed02984299a"  # original C2.EXE
+ORIGINAL_C2_MD5: str = "dcd69f1dd28b02dd03dd7ed02984299a"  # original C2.EXE
 
-C2_MD5 = (
+C2_MD5: tuple[str, str] = (
     ORIGINAL_C2_MD5,
     "e70acde41802ddec06c4263bb357ac30",  # patched C2.EXE
 )
 
-C2_SIZE = 549888
+C2_SIZE: int = 549888
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
         allow_abbrev=False,
         description="Path to C2.EXE of Microsoft Visual Studio 4.2.0 to disable C4786 warning",
@@ -29,8 +30,8 @@ def main():
     if not args.path.is_file():
         parser.error("Input is not a file")
 
-    binary = bytearray(args.path.open("rb").read())
-    md5 = hashlib.md5(binary).hexdigest()
+    binary: bytearray = bytearray(args.path.open("rb").read())
+    md5: str = hashlib.md5(binary).hexdigest()
     print(md5, C2_MD5)
 
     msg_cb = parser.error if not args.force else print
@@ -40,14 +41,14 @@ def main():
         msg_cb("md5 checksum does not match")
 
     if md5 == ORIGINAL_C2_MD5:
-        backup = f"{args.path}.BAK"
+        backup: str = f"{args.path}.BAK"
         print(f'Creating backup "{backup}"')
         shutil.copyfile(args.path, backup)
 
-    def nop_patch(start, count, expected=None):
-        replacement = [0x90] * count
+    def nop_patch(start: int, count: int, expected: Optional[List[int]] = None) -> None:
+        replacement: List[int] = [0x90] * count
         if expected:
-            current = list(binary[start : start + count])
+            current: List[int] = list(binary[start : start + count])
             assert len(expected) == count
             assert current in (expected, replacement)
         print(f"Nopping {count} bytes at 0x{start:08x}")
